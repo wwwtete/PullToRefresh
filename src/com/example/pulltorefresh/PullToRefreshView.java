@@ -121,6 +121,9 @@ public class PullToRefreshView extends LinearLayout {
 	 * footer refresh listener
 	 */
 	private OnHeaderRefreshListener mOnHeaderRefreshListener;
+	
+	private boolean mPullDownEnable; // 下拉刷新是否可以，默认不可用
+	private boolean mPullUpEnable; // 上拉刷新是否可用，默认不可用
 	/**
 	 * last update time
 	 */
@@ -134,6 +137,25 @@ public class PullToRefreshView extends LinearLayout {
 	public PullToRefreshView(Context context) {
 		super(context);
 		init();
+	}
+	
+	/**
+	 * 设置下拉刷新是否可用
+	 * 
+	 * @param flage
+	 */
+	public void setPullDownRefreshEnable(boolean flage) {
+		this.mPullDownEnable = flage;
+	}
+
+	/**
+	 * 设置上拉更新功能是否可用
+	 * 
+	 * @param flage
+	 */
+	public void setPullUpRefreshEnable(boolean flage) {
+		mFooterView.setVisibility(View.VISIBLE);
+		this.mPullUpEnable = flage;
 	}
 
 	/**
@@ -303,10 +325,10 @@ public class PullToRefreshView extends LinearLayout {
 			break;
 		case MotionEvent.ACTION_MOVE:
 			int deltaY = y - mLastMotionY;
-			if (mPullState == PULL_DOWN_STATE) {//执行下拉
+			if (mPullState == PULL_DOWN_STATE && mPullDownEnable) {//执行下拉
 				headerPrepareToRefresh(deltaY);
 				// setHeaderPadding(-mHeaderViewHeight);
-			} else if (mPullState == PULL_UP_STATE) {//执行上拉
+			} else if (mPullState == PULL_UP_STATE && mPullUpEnable) {//执行上拉
 				footerPrepareToRefresh(deltaY);
 			}
 			mLastMotionY = y;
@@ -314,7 +336,7 @@ public class PullToRefreshView extends LinearLayout {
 		case MotionEvent.ACTION_UP:
 		case MotionEvent.ACTION_CANCEL:
 			int topMargin = getHeaderTopMargin();
-			if (mPullState == PULL_DOWN_STATE) {
+			if (mPullState == PULL_DOWN_STATE && mPullDownEnable) {
 				if (topMargin >= 0) {
 					// 开始刷新
 					headerRefreshing();
@@ -322,7 +344,7 @@ public class PullToRefreshView extends LinearLayout {
 					// 还没有执行刷新，重新隐藏
 					setHeaderTopMargin(-mHeaderViewHeight);
 				}
-			} else if (mPullState == PULL_UP_STATE) {
+			}else if (mPullState == PULL_UP_STATE && mPullUpEnable){
 				if (Math.abs(topMargin) >= mHeaderViewHeight
 						+ mFooterViewHeight) {
 					// 开始执行footer 刷新
@@ -612,11 +634,13 @@ public class PullToRefreshView extends LinearLayout {
 	 */
 	public void setOnHeaderRefreshListener(
 			OnHeaderRefreshListener headerRefreshListener) {
+		setPullDownRefreshEnable(headerRefreshListener != null);
 		mOnHeaderRefreshListener = headerRefreshListener;
 	}
 
 	public void setOnFooterRefreshListener(
 			OnFooterRefreshListener footerRefreshListener) {
+		setPullUpRefreshEnable(footerRefreshListener != null);
 		mOnFooterRefreshListener = footerRefreshListener;
 	}
 
